@@ -143,6 +143,53 @@ class KnowledgeBase(object):
         ####################################################
         # Student code goes here
 
+        if self._get_fact(fact_or_rule) or self._get_rule(fact_or_rule):
+            string = ''
+
+            if self._get_fact(fact_or_rule):
+                hold = [[self._get_fact(fact_or_rule), 0]]
+            elif self._get_rule(fact_or_rule):
+                hold = [[self._get_rule(fact_or_rule), 0]]
+
+            while len(hold) > 0:
+                fr = hold[0][0]
+                spacing = hold[0][1]
+
+                if type(fr) is Fact:
+                    if spacing > 0:
+                        string = string + (spacing-1)*'  ' + 'SUPPORTED BY\n'
+                    string = string + spacing*'  ' + 'fact: ' + str(fr.statement)
+                elif type(fr) is Rule:
+                    string = string + spacing*'  ' + 'rule: (' + ', '.join(map(str, fr.lhs)) + ') -> ' + str(fr.rhs)
+
+                if fr.asserted:  # asserted
+                    string = string + ' ASSERTED\n'
+                    hold.pop(0)
+                elif len(fr.supported_by) == 0:  # not asserted, not supported by anything (?)
+                    string = string + '\n'
+                    hold.pop(0)
+                elif len(fr.supported_by) > 0:  # supported by
+                    string = string + '\n'
+                    temp = []  # create new temp to add at beginning
+                    for x in fr.supported_by:
+                        temp.append([x[0], spacing+2])  # add the first element of fact/rule pair, aka fact
+                        temp.append([x[1], spacing+2])  # add rule
+
+                    hold.pop(0)  # remove first element, fr refers to next item
+                    hold = temp + hold
+
+            print(string)
+            return string
+
+        else:
+            if type(fact_or_rule) is Fact:
+                return 'Fact is not in the KB'
+            elif type(fact_or_rule) is Rule:
+                return 'Rule is not in the KB'
+            else:
+                return False
+
+
 
 class InferenceEngine(object):
     def fc_infer(self, fact, rule, kb):
